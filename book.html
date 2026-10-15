@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Book | Between Pages</title>
+
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet">
+
+
+    <link rel="stylesheet"
+          href="style.css">
+
+</head>
+
+
+<body>
+
+<header class="header">
+
+    <div class="container nav">
+
+
+        <a href="index.html"
+           class="logo">
+            Between Pages
+        </a>
+
+
+        <nav>
+
+            <a href="index.html">
+                Library
+            </a>
+
+            <a href="index.html#about">
+                About
+            </a>
+
+            <a href="index.html#contact">
+                Contact
+            </a>
+
+        </nav>
+
+
+        <button id="themeToggle"
+                class="theme-btn">
+            ☾
+        </button>
+
+    </div>
+
+</header>
+
+
+<main>
+
+<section class="book-detail-section">
+
+    <div class="container">
+
+
+        <a href="index.html#library"
+           class="back-link">
+            ← Back to Library
+        </a>
+
+
+        <div id="bookDetail">
+        </div>
+
+
+        <!-- JOURNAL -->
+
+        <section class="journal-section">
+
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span class="eyebrow">
+                        MY JOURNAL
+                    </span>
+
+
+                    <h2>
+                        Reading Notes
+                    </h2>
+
+                </div>
+
+            </div>
+
+
+            <!-- NOTES -->
+
+            <form id="noteForm"
+                  class="journal-form">
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="notePage">
+                            Page
+                        </label>
+
+
+                        <input
+                            type="number"
+                            id="notePage"
+                            placeholder="e.g. 42"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="noteDate">
+                            Date
+                        </label>
+
+
+                        <input
+                            type="date"
+                            id="noteDate"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="noteText">
+                        Note
+                    </label>
+
+
+                    <textarea
+                        id="noteText"
+                        rows="5"
+                        placeholder="Write something you noticed while reading..."
+                        required
+                    ></textarea>
+
+                </div>
+
+
+                <button class="primary-btn">
+                    Save Note
+                </button>
+
+            </form>
+
+
+            <div id="notesList"
+                 class="notes-list">
+            </div>
+
+
+            <!-- PROGRESS -->
+
+            <div class="journal-block">
+
+                <h3>
+                    Reading Progress
+                </h3>
+
+
+                <input
+                    type="range"
+                    id="progressRange"
+                    min="0"
+                    max="100"
+                    value="0"
+                >
+
+
+                <span id="progressValue">
+                    0%
+                </span>
+
+
+                <button
+                    id="saveProgress"
+                    class="secondary-btn">
+                    Save Progress
+                </button>
+
+            </div>
+
+
+            <!-- QUOTES -->
+
+            <div class="journal-block">
+
+                <h3>
+                    Favorite Quotes
+                </h3>
+
+
+                <form id="quoteForm"
+                      class="journal-form">
+
+
+                    <textarea
+                        id="quoteText"
+                        rows="4"
+                        placeholder="Write your favorite quote..."
+                        required
+                    ></textarea>
+
+
+                    <input
+                        type="text"
+                        id="quotePage"
+                        placeholder="Page (optional)"
+                    >
+
+
+                    <button class="primary-btn">
+                        Save Quote
+                    </button>
+
+                </form>
+
+
+                <div id="quotesList"></div>
+
+            </div>
+
+
+            <!-- REVIEW -->
+
+            <div class="journal-block">
+
+                <h3>
+                    My Review
+                </h3>
+
+
+                <form id="reviewForm"
+                      class="journal-form">
+
+
+                    <textarea
+                        id="reviewText"
+                        rows="8"
+                        placeholder="Write your thoughts about this book..."
+                    ></textarea>
+
+
+                    <button class="primary-btn">
+                        Save Review
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <!-- COMMENTS -->
+
+            <div class="journal-block">
+
+                <h3>
+                    Reader Comments
+                </h3>
+
+
+                <form id="commentForm"
+                      class="journal-form">
+
+
+                    <input
+                        type="text"
+                        id="commentName"
+                        placeholder="Your name"
+                        required
+                    >
+
+
+                    <textarea
+                        id="commentText"
+                        rows="4"
+                        placeholder="Share your thoughts..."
+                        required
+                    ></textarea>
+
+
+                    <button class="primary-btn">
+                        Post Comment
+                    </button>
+
+                </form>
+
+
+                <div id="commentsList"></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- NAVIGATION -->
+
+        <div class="book-navigation">
+
+            <button
+                id="prevBook"
+                class="secondary-btn">
+                ← Previous Book
+            </button>
+
+
+            <button
+                id="nextBook"
+                class="secondary-btn">
+                Next Book →
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+</main>
+
+
+<footer class="site-footer">
+    <div class="footer-main">
+
+        <div class="footer-brand">
+            <a href="index.html" class="footer-logo">
+                Between Pages
+            </a>
+
+            <p>
+                A personal reading journal for stories,
+                thoughts, and everything worth remembering.
+            </p>
+
+            <span class="footer-creator">
+                Created by <strong>Manezha Ebrahimi</strong>
+            </span>
+        </div>
+
+        <div class="footer-column">
+            <h4>Explore</h4>
+            <a href="index.html">Home</a>
+            <a href="index.html#library">Library</a>
+            <a href="index.html#about">About</a>
+            <a href="index.html#contact">Contact</a>
+        </div>
+
+        <div class="footer-column">
+            <h4>Library</h4>
+            <a href="index.html#library">All Books</a>
+            <a href="index.html#library">Currently Reading</a>
+            <a href="index.html#library">Finished Books</a>
+            <a href="index.html#library">Favorites</a>
+        </div>
+
+        <div class="footer-column">
+            <h4>My Journal</h4>
+            <a href="index.html#library">Reading Notes</a>
+            <a href="index.html#library">Favorite Quotes</a>
+            <a href="index.html#library">Reviews</a>
+        </div>
+
+    </div>
+
+    <div class="footer-bottom">
+        <p>© 2026 Manezha Ebrahimi · Between Pages</p>
+
+        <p class="footer-tagline">
+            Made with curiosity, books, and code.
+        </p>
+    </div>
+</footer>
+
+<script src="books.js"></script>
+<script src="book.js"></script>
+
+</body>
+
+</html>
