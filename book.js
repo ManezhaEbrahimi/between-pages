@@ -672,119 +672,501 @@ function setupProgress() {
 // Comments
 // ------------------------------
 
-function setupComments() {
+// ------------------------------
+// Comments - Supabase
+// ------------------------------
 
-    const key =
-        `comments_book_${book.id}`;
-
-
-    let comments =
-        JSON.parse(
-            localStorage.getItem(key)
-        ) || [];
-
+async function setupComments() {
 
     const form =
-        document.getElementById(
-            "commentForm"
-        );
-
+        document.getElementById("commentForm");
 
     const list =
-        document.getElementById(
-            "commentsList"
-        );
+        document.getElementById("commentsList");
+
+    if (!form || !list) return;
 
 
-    renderComments();
+    // Load comments
+    await loadComments();
 
 
-    form.addEventListener(
-        "submit",
-        event => {
+    // Add new comment
+    form.addEventListener("submit", async event => {
 
-            event.preventDefault();
-
-
-            const name =
-                document.getElementById(
-                    "commentName"
-                ).value.trim();
+        event.preventDefault();
 
 
-            const text =
-                document.getElementById(
-                    "commentText"
-                ).value.trim();
+        const name =
+            document.getElementById("commentName")
+                .value.trim();
+
+        const text =
+            document.getElementById("commentText")
+                .value.trim();
 
 
-            comments.push({
-
-                name,
-                text,
-
-                date:
-                    new Date()
-                        .toLocaleDateString(
-                            "en-US"
-                        )
-
-            });
+        if (!name || !text) {
+            alert("Please enter your name and comment.");
+            return;
+        }
 
 
-            localStorage.setItem(
-                key,
-                JSON.stringify(comments)
+        const { error } =
+            await supabaseClient
+                .from("comments")
+                .insert([
+                    {
+                        book_id: book.id,
+                        user_name: name,
+                        content: text
+                    }
+                ]);
+
+
+        if (error) {
+
+            console.error(error);
+
+            alert(
+                "Sorry, your comment could not be posted."
             );
 
-
-            form.reset();
-
-            renderComments();
-
+            return;
         }
-    );
 
 
-    function renderComments() {
+        form.reset();
+
+        await loadComments();
+
+    });
+
+
+    // --------------------------------
+    // Load comments from Supabase
+    // --------------------------------
+
+    async function loadComments() {
+
+        list.innerHTML =
+            "<p class='comments-loading'>Loading comments...</p>";
+
+
+        const { data: comments, error } =
+            await supabaseClient
+                .from("comments")
+                .select("*")
+                .eq("book_id", book.id)
+                .order("created_at", {
+                    ascending: true
+                });
+
+
+        if (error) {
+
+            console.error(error);
+
+            list.innerHTML =
+                "<p>Could not load comments.</p>";
+
+            return;
+        }
+
+
+        if (!comments || comments.length === 0) {
+
+            list.innerHTML =
+                "<p class='comments-empty'>No comments yet. Be the first to comment.</p>";
+
+            return;
+        }
+
 
         list.innerHTML = "";
 
 
-        comments.forEach(comment => {
+        for (const comment of comments) {
 
-            const div =
-                document.createElement(
-                    "div"
+            await renderComment(comment);
+
+        }
+
+    }
+
+
+    // --------------------------------
+    // Render one comment
+    // --------------------------------
+
+    async function renderComment(comment) {
+
+        const div =
+            document.createElement("div");
+
+
+        div.className =
+            "comment-card";
+
+
+        const date =
+            comment.created_at
+                ? new Date(
+                    comment.created_at
+                ).toLocaleDateString("en-US")
+                : "";
+
+
+        // Get likes
+        const { data: likes } =
+            await supabaseClient
+                .from("comment_likes")
+                .select("id, user_name")
+                .eq("comment_id", comment.id);
+
+
+        const likeCount =
+            likes ? likes.length : 0;
+
+
+        // Get replies
+        const { data: replies } =
+            await supabaseClient
+                .from("comment_replies")
+                .select("*")
+                .eq("comment_id", comment.id)
+                .order("created_at", {
+                    ascending: true
+                });
+
+
+        div.innerHTML = `
+
+            <div class="comment-header">
+
+                <strong>
+                    ${escapeHTML(comment.user_name)}
+                </strong>
+
+                <small>
+                    ${escapeHTML(date)}
+                </small>
+
+            </div>
+
+
+            <p>
+                ${escapeHTML(comment.content)}
+            </p>
+
+
+            <div class="comment-actions">
+
+                <button
+                    type="button"
+                    class="comment-like-btn"
+                    data-comment-id="${comment.id}"
+                >
+                    ♡ Like
+                    <span>${likeCount}</span>
+                </button>
+
+
+                <button
+                    type="button"
+                    class="comment-reply-btn"
+                    data-comment-id="${comment.id}"
+                >
+                    Reply
+                </button>
+
+            </div>
+
+
+            <div
+                class="reply-form-container"
+                id="reply-form-${comment.id}"
+            ></div>
+
+
+            <div class="comment-replies">
+
+                ${
+                    replies && replies.length
+                        ? replies.map(reply => `
+
+                            <div class="comment-reply">
+
+                                <strong>
+                                    ${escapeHTML(reply.user_name)}
+                                </strong>
+
+                                <small>
+                                    ${
+                                        reply.created_at
+                                            ? new Date(
+                                                reply.created_at
+                                            ).toLocaleDateString("en-US")
+                                            : ""
+                                    }
+                                </small>
+
+                                <p>
+                                    ${escapeHTML(reply.content)}
+                                </p>
+
+                            </div>
+
+                        `).join("")
+                        : ""
+                }
+
+            </div>
+
+        `;
+
+
+        list.appendChild(div);
+
+
+        // Like button
+        const likeButton =
+            div.querySelector(
+                ".comment-like-btn"
+            );
+
+
+        likeButton.addEventListener(
+            "click",
+            async () => {
+
+                const userName =
+                    getCommentUserName();
+
+
+                if (!userName) return;
+
+
+                // Check if this person already liked it
+                const { data: existingLike } =
+                    await supabaseClient
+                        .from("comment_likes")
+                        .select("id")
+                        .eq(
+                            "comment_id",
+                            comment.id
+                        )
+                        .eq(
+                            "user_name",
+                            userName
+                        )
+                        .maybeSingle();
+
+
+                if (existingLike) {
+
+                    // Remove like
+                    await supabaseClient
+                        .from("comment_likes")
+                        .delete()
+                        .eq(
+                            "id",
+                            existingLike.id
+                        );
+
+                } else {
+
+                    // Add like
+                    await supabaseClient
+                        .from("comment_likes")
+                        .insert([
+                            {
+                                comment_id:
+                                    comment.id,
+
+                                user_name:
+                                    userName
+                            }
+                        ]);
+
+                }
+
+
+                await loadComments();
+
+            }
+        );
+
+
+        // Reply button
+        const replyButton =
+            div.querySelector(
+                ".comment-reply-btn"
+            );
+
+
+        replyButton.addEventListener(
+            "click",
+            () => {
+
+                const container =
+                    div.querySelector(
+                        ".reply-form-container"
+                    );
+
+
+                if (container.innerHTML) {
+
+                    container.innerHTML = "";
+
+                    return;
+
+                }
+
+
+                container.innerHTML = `
+
+                    <form
+                        class="reply-form"
+                    >
+
+                        <input
+                            type="text"
+                            class="reply-name"
+                            placeholder="Your name"
+                            required
+                        >
+
+                        <textarea
+                            class="reply-text"
+                            placeholder="Write a reply..."
+                            rows="3"
+                            required
+                        ></textarea>
+
+                        <button
+                            type="submit"
+                        >
+                            Post Reply
+                        </button>
+
+                    </form>
+
+                `;
+
+
+                const replyForm =
+                    container.querySelector(
+                        ".reply-form"
+                    );
+
+
+                replyForm.addEventListener(
+                    "submit",
+                    async event => {
+
+                        event.preventDefault();
+
+
+                        const name =
+                            container
+                                .querySelector(
+                                    ".reply-name"
+                                )
+                                .value.trim();
+
+
+                        const text =
+                            container
+                                .querySelector(
+                                    ".reply-text"
+                                )
+                                .value.trim();
+
+
+                        if (!name || !text) return;
+
+
+                        const { error } =
+                            await supabaseClient
+                                .from(
+                                    "comment_replies"
+                                )
+                                .insert([
+                                    {
+                                        comment_id:
+                                            comment.id,
+
+                                        user_name:
+                                            name,
+
+                                        content:
+                                            text
+                                    }
+                                ]);
+
+
+                        if (error) {
+
+                            console.error(error);
+
+                            alert(
+                                "Sorry, your reply could not be posted."
+                            );
+
+                            return;
+                        }
+
+
+                        await loadComments();
+
+                    }
+                );
+
+            }
+        );
+
+    }
+
+
+    // --------------------------------
+    // Remember the name for likes
+    // --------------------------------
+
+    function getCommentUserName() {
+
+        let name =
+            localStorage.getItem(
+                "betweenPagesCommentName"
+            );
+
+
+        if (!name) {
+
+            name =
+                prompt(
+                    "Enter your name to like this comment:"
                 );
 
 
-            div.className =
-                "comment-card";
+            if (!name) return null;
 
 
-            div.innerHTML = `
-
-                <strong>
-                    ${escapeHTML(comment.name)}
-                </strong>
+            name = name.trim();
 
 
-                <small>
-                    ${escapeHTML(comment.date)}
-                </small>
+            if (!name) return null;
 
 
-                <p>
-                    ${escapeHTML(comment.text)}
-                </p>
+            localStorage.setItem(
+                "betweenPagesCommentName",
+                name
+            );
 
-            `;
+        }
 
 
-            list.appendChild(div);
-
-        });
+        return name;
 
     }
 
